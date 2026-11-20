@@ -853,14 +853,19 @@ class Store:
                 self._advance(c, room_id, reader, rows[-1]["id"])
         return [public_message(m) for m in rows]
 
-    def recent_for_person(self, user_id: str, room_id: str, limit: int = 100) -> list[dict[str, Any]]:
-        """The web room page: newest messages, and mark them read for the person."""
+    def recent_for_person(self, user_id: str, room_id: str, limit: int = 100) -> tuple[list[dict[str, Any]], int]:
+        """The web room page: newest messages, and mark them read for the person.
+
+        Also returns the cursor from before this visit, so the page can mark where
+        unread messages started. 0 means this person had never read the room.
+        """
         with self.db.tx() as c:
             self._room(c, user_id, room_id)
+            prev = self._cursor(c, room_id, f"u:{user_id}")
             rows = messages.latest(c, room_id, limit)
             if rows:
                 self._advance(c, room_id, f"u:{user_id}", rows[-1]["id"])
-        return [public_message(m) for m in rows]
+        return [public_message(m) for m in rows], prev
 
     def after_for_person(self, user_id: str, room_id: str, after: int) -> list[dict[str, Any]]:
         """The web page's live poll: everything after `after` in one room."""

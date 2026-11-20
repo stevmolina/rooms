@@ -1,4 +1,4 @@
-"""The room page: who wrote what, reply quotes, the Room panel and the invite flash."""
+"""The room page: who wrote what, reply quotes, the Room panel, the invite flash, the timeline."""
 
 from __future__ import annotations
 
@@ -25,3 +25,40 @@ async def test_invite_link_opens_in_the_room_panel(live: Live):
     page = alice.post(f"/r/{room}/invite", {"uses": 1, "hours": 24}).text
     assert 'class="panel open"' in page and "/join/" in page
     assert page.index('id="room-panel"') < page.index("/join/")  # the link sits inside the panel
+
+
+async def test_room_page_includes_the_timeline_rail(live: Live):
+    room = await make_room(live, "carol", "Rail room")
+    page = live.web("carol").get(f"/r/{room}").text
+    assert 'id="timeline"' in page and 'aria-label="Conversation timeline"' in page
+    assert 'id="timeline-new"' in page and 'class="rail-new"' in page
+    assert ".rail-win{" in page and "@media (max-width:1180px)" in page
+    assert "data-unread-from=" not in page  # first visit, even with no messages
+
+
+async def test_timeline_marks_unread_only_after_a_prior_visit(live: Live):
+    room = await make_room(live, "carol", "Unread rail")
+    await add_member(live, room, "carol", "dave")
+    first = live.web("carol").post(f"/r/{room}/send", {"body": "Starting here."})
+    assert first.status_code == 303
+    # Carol has now read the room (sending advances her cursor). Dave posts two more.
+    dave = live.web("dave")
+    assert dave.post(f"/r/{room}/send", {"body": "First new note."}).status_code == 303
+    assert dave.post(f"/r/{room}/send", {"body": "Second new note."}).status_code == 303
+    ids = [r[0] for r in live.sql("SELECT id FROM messages WHERE room_id = ? ORDER BY id", (room,))]
+    assert len(ids) == 3
+    page = live.web("carol").get(f"/r/{room}").text
+    assert f'data-unread-from="{ids[1]}"' in page
+    assert 'data-unread-count="2"' in page
+    # Opening the page marks those as read, so a reload has no unread marker.
+    again = live.web("carol").get(f"/r/{room}").text
+    assert "data-unread-from=" not in again
+
+
+async def test_timeline_skips_unread_on_a_first_visit_to_a_busy_room(live: Live):
+    room = await make_room(live, "carol", "Busy first visit")
+    await add_member(live, room, "carol", "dave")
+    assert live.web("dave").post(f"/r/{room}/send", {"body": "Already here."}).status_code == 303
+    page = live.web("carol").get(f"/r/{room}").text
+    assert "Already here." in page
+    assert "data-unread-from=" not in page

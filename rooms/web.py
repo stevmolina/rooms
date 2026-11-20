@@ -193,6 +193,37 @@ transform:translateX(100%);transition:transform .2s ease,visibility 0s linear .2
 .ar select{width:auto;padding:3px 8px;font-size:.82rem}
 html.js .js-hide{display:none}
 button.sm{padding:3px 12px;font-size:.8rem}
+.rail{position:fixed;left:calc(50% + 456px);top:120px;bottom:140px;width:128px;z-index:5;
+user-select:none;touch-action:none}
+.rail[hidden],.rail-new[hidden],.rail-ghost[hidden],.rail-tip[hidden]{display:none!important}
+.rail-marks{position:absolute;inset:0;pointer-events:none}
+.rail-line{position:absolute;left:0;top:0;bottom:0;width:1.5px;background:var(--ink);opacity:.25}
+.rail-tick{position:absolute;left:-3px;width:8px;height:1.5px;background:var(--muted)}
+.rail-day{position:absolute;left:-6px;display:flex;align-items:center;gap:8px}
+.rail-day i{width:14px;height:1.5px;background:var(--ink);flex:none}
+.rail-day b{font:700 1.3rem/1 Caveat,"Segoe Script",cursive;color:var(--ink);white-space:nowrap}
+.rail-hour{position:absolute;left:14px;font:11px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--muted)}
+.rail-win{position:absolute;left:-5px;width:12px;border:1.5px solid var(--ink);border-radius:99px;
+background:var(--pk);box-shadow:2px 2px 0 var(--ink);cursor:grab;min-height:16px}
+.rail.dragging .rail-win{cursor:grabbing}
+.rail-handle{position:absolute;right:calc(100% + 14px);transform:translateY(-50%);background:var(--ink);
+color:var(--on-ink);font-size:.74rem;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap;
+pointer-events:none;line-height:1.3}
+.rail-unread{position:absolute;left:-4px;width:9px;height:9px;border-radius:50%;background:var(--pkd);
+border:1.5px solid var(--ink)}
+.rail-new{position:fixed;left:calc(50% + 420px);bottom:96px;z-index:6;display:inline-flex;align-items:center;
+background:var(--pk);color:#111;border:1.5px solid var(--ink);border-radius:99px;padding:5px 12px;
+font-size:.8rem;font-weight:700;box-shadow:2px 2px 0 var(--ink)}
+.rail-new:hover{opacity:1;background:#ffd4f1}
+.rail-ghost{position:absolute;left:-5px;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ink);
+background:var(--paper);transform:translateY(-50%);pointer-events:none;z-index:1}
+.rail-tip{position:absolute;left:18px;transform:translateY(-50%);width:196px;background:var(--paper);
+border:1.5px solid var(--ink);border-radius:8px;box-shadow:3px 3px 0 var(--ink);padding:9px 12px;
+font-size:.8rem;line-height:1.4;z-index:2;pointer-events:none;color:var(--ink)}
+.rail-tip .w{font-weight:700;font-size:.78rem}
+.rail-tip .w span{color:var(--muted);font-weight:500;margin-left:6px}
+.rail-tip .p{margin-top:2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+@media (max-width:1180px){.rail,.rail-new{display:none!important}}
 """
 
 MARK = (
@@ -574,7 +605,9 @@ document.documentElement.classList.add('js');
   function nearBottom() {
     return window.innerHeight + window.scrollY > document.documentElement.scrollHeight - 160;
   }
-  if (!/^#m\\d+$/.test(location.hash)) window.scrollTo(0, document.documentElement.scrollHeight);
+  if (!/^#m\\d+$/.test(location.hash) && !list.getAttribute('data-unread-from')) {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+  }
   function poll() {
     fetch('/r/' + encodeURIComponent(room) + '/poll?after=' + last,
           {credentials: 'same-origin', headers: {'Accept': 'application/json'}})
@@ -592,6 +625,260 @@ document.documentElement.classList.add('js');
       .catch(function (e) { if (e.message !== 'stop') setTimeout(poll, 3000); });
   }
   poll();
+})();
+(function () {
+  var list = document.getElementById('messages');
+  var rail = document.getElementById('timeline');
+  var marks = rail && rail.querySelector('.rail-marks');
+  var win = rail && rail.querySelector('.rail-win');
+  var handle = rail && rail.querySelector('.rail-handle');
+  var unreadDot = rail && rail.querySelector('.rail-unread');
+  var ghost = rail && rail.querySelector('.rail-ghost');
+  var tip = rail && rail.querySelector('.rail-tip');
+  var jump = document.getElementById('timeline-new');
+  if (!list || !rail || !marks || !win || !handle || !unreadDot || !ghost || !tip) return;
+
+  var unreadFrom = parseInt(list.getAttribute('data-unread-from') || '0', 10) || 0;
+  var liveFrom = 0;
+  var dragging = false;
+  var grabOffset = 0;
+  var hoverY = null;
+  var scheduled = 0;
+  var lastCount = 0;
+
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+  function msgs() { return Array.prototype.slice.call(list.querySelectorAll('li.msg')); }
+  function msgId(el) { return parseInt((el.id || '').replace(/^m/, ''), 10) || 0; }
+  function atOf(el) { return new Date(el.getAttribute('data-at') || ''); }
+  function docH() { return Math.max(document.documentElement.scrollHeight, 1); }
+  function yOf(el, h, sh) { return ((el.getBoundingClientRect().top + window.scrollY) / sh) * h; }
+  function marker() { return unreadFrom || liveFrom; }
+  function el(tag, cls) { var n = document.createElement(tag); if (cls) n.className = cls; return n; }
+  function dayStamp(d) {
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString(undefined, {weekday: 'short'}) + ' ' + d.getDate();
+  }
+  function handleStamp(d) {
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString(undefined, {weekday: 'short'}) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function firstVisible() {
+    var items = msgs();
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].getBoundingClientRect().bottom > 80) return items[i];
+    }
+    return items[0] || null;
+  }
+  function messageAtY(y, h, sh) {
+    var items = msgs();
+    var best = items[0] || null;
+    for (var i = 0; i < items.length; i++) {
+      if (yOf(items[i], h, sh) <= y) best = items[i];
+      else break;
+    }
+    return best;
+  }
+
+  function buildMarks() {
+    var items = msgs();
+    if (!items.length) {
+      rail.hidden = true;
+      if (jump) jump.hidden = true;
+      return;
+    }
+    rail.hidden = false;
+    var h = Math.max(rail.clientHeight, 1);
+    var sh = docH();
+    marks.replaceChildren();
+    marks.appendChild(el('div', 'rail-line'));
+    var lastDay = '', lastHour = -1;
+    items.forEach(function (item) {
+      var d = atOf(item);
+      if (isNaN(d)) return;
+      var y = yOf(item, h, sh);
+      var day = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+      var hour = d.getHours();
+      if (day !== lastDay) {
+        lastDay = day;
+        lastHour = hour;
+        var row = el('div', 'rail-day');
+        row.style.top = (y - 8) + 'px';
+        row.appendChild(document.createElement('i'));
+        var b = document.createElement('b');
+        b.textContent = dayStamp(d);
+        row.appendChild(b);
+        marks.appendChild(row);
+        return;
+      }
+      if (hour !== lastHour) {
+        lastHour = hour;
+        var tick = el('div', 'rail-tick');
+        tick.style.top = y + 'px';
+        marks.appendChild(tick);
+        if (hour % 3 === 0) {
+          var lab = el('div', 'rail-hour');
+          lab.style.top = (y - 5) + 'px';
+          lab.textContent = pad(hour) + ':00';
+          marks.appendChild(lab);
+        }
+      }
+    });
+    paint();
+  }
+
+  function paint() {
+    if (rail.hidden) return;
+    var items = msgs();
+    if (!items.length) return;
+    var h = Math.max(rail.clientHeight, 1);
+    var sh = docH();
+    var vh = window.innerHeight;
+    var a = (window.scrollY / sh) * h;
+    var b = ((window.scrollY + vh) / sh) * h;
+    var winH = Math.max(b - a, 16);
+    win.hidden = false;
+    win.style.top = a + 'px';
+    win.style.height = winH + 'px';
+    var cur = firstVisible();
+    handle.hidden = !cur;
+    if (cur) {
+      handle.style.top = (a + winH / 2) + 'px';
+      handle.textContent = handleStamp(atOf(cur));
+    }
+    var startEl = marker() ? document.getElementById('m' + marker()) : null;
+    unreadDot.hidden = !startEl;
+    if (startEl) unreadDot.style.top = (yOf(startEl, h, sh) - 4) + 'px';
+    if (hoverY !== null) showTip(hoverY, h, sh);
+    updateJump();
+  }
+
+  function updateJump() {
+    if (!jump) return;
+    var start = marker();
+    if (!start) { jump.hidden = true; return; }
+    var below = msgs().filter(function (item) {
+      return msgId(item) >= start && item.getBoundingClientRect().top > window.innerHeight - 80;
+    });
+    if (!below.length) { jump.hidden = true; return; }
+    jump.hidden = false;
+    jump.textContent = below.length + ' new ↓';
+  }
+
+  function showTip(y, h, sh) {
+    var item = messageAtY(y, h, sh);
+    if (!item) { hideTip(); return; }
+    ghost.hidden = false;
+    ghost.style.top = y + 'px';
+    var author = item.querySelector('.author');
+    var body = item.querySelector('.body');
+    var who = author ? author.textContent : (item.classList.contains('system') ? 'Rooms' : '');
+    var preview = body ? body.textContent.replace(/\\s+/g, ' ').trim() : '';
+    tip.hidden = false;
+    tip.replaceChildren();
+    var w = el('div', 'w');
+    w.appendChild(document.createTextNode(who));
+    var t = document.createElement('span');
+    t.textContent = handleStamp(atOf(item));
+    w.appendChild(t);
+    tip.appendChild(w);
+    var p = el('div', 'p');
+    p.textContent = preview;
+    tip.appendChild(p);
+    tip.style.top = y + 'px';
+  }
+
+  function hideTip() {
+    hoverY = null;
+    ghost.hidden = true;
+    tip.hidden = true;
+  }
+
+  function scrollToFrac(frac) {
+    var sh = docH();
+    var max = Math.max(0, sh - window.innerHeight);
+    window.scrollTo(0, Math.min(max, Math.max(0, frac * sh)));
+  }
+
+  function yFromEvent(ev) {
+    var rect = rail.getBoundingClientRect();
+    return Math.min(rect.height, Math.max(0, ev.clientY - rect.top));
+  }
+
+  rail.addEventListener('pointerdown', function (ev) {
+    if (ev.button !== 0) return;
+    ev.preventDefault();
+    rail.setPointerCapture(ev.pointerId);
+    dragging = true;
+    rail.classList.add('dragging');
+    var y = yFromEvent(ev);
+    var winTop = parseFloat(win.style.top) || 0;
+    var onWin = ev.target === win || (y >= winTop && y <= winTop + win.offsetHeight);
+    grabOffset = onWin ? (y - winTop) : ((win.offsetHeight || 16) / 2);
+    scrollToFrac((y - grabOffset) / Math.max(rail.getBoundingClientRect().height, 1));
+    hoverY = y;
+    paint();
+  });
+  rail.addEventListener('pointermove', function (ev) {
+    var y = yFromEvent(ev);
+    hoverY = y;
+    if (dragging) {
+      ev.preventDefault();
+      scrollToFrac((y - grabOffset) / Math.max(rail.getBoundingClientRect().height, 1));
+    } else {
+      showTip(y, Math.max(rail.clientHeight, 1), docH());
+    }
+  });
+  function endDrag() {
+    dragging = false;
+    rail.classList.remove('dragging');
+  }
+  rail.addEventListener('pointerup', endDrag);
+  rail.addEventListener('pointercancel', endDrag);
+  rail.addEventListener('pointerleave', function () { if (!dragging) hideTip(); });
+
+  if (jump) {
+    jump.addEventListener('click', function () {
+      var start = marker();
+      var target = start && document.getElementById('m' + start);
+      if (target && target.getBoundingClientRect().top > 80) {
+        target.scrollIntoView({block: 'start'});
+      } else {
+        window.scrollTo(0, docH());
+      }
+    });
+  }
+
+  function schedule(rebuild) {
+    if (scheduled) return;
+    scheduled = requestAnimationFrame(function () {
+      scheduled = 0;
+      if (rebuild) buildMarks();
+      else paint();
+    });
+  }
+
+  window.addEventListener('scroll', function () { schedule(false); }, {passive: true});
+  window.addEventListener('resize', function () { schedule(true); });
+
+  new MutationObserver(function () {
+    var n = msgs().length;
+    if (n === lastCount) return;
+    if (n > lastCount && lastCount > 0) {
+      var near = window.innerHeight + window.scrollY > docH() - 160;
+      if (!near && !liveFrom) {
+        var items = msgs();
+        liveFrom = msgId(items[lastCount] || items[items.length - 1]);
+      }
+    }
+    lastCount = n;
+    schedule(true);
+  }).observe(list, {childList: true});
+
+  lastCount = msgs().length;
+  if (unreadFrom && document.getElementById('m' + unreadFrom) && !/^#m\\d+$/.test(location.hash)) {
+    document.getElementById('m' + unreadFrom).scrollIntoView({block: 'start'});
+  }
+  buildMarks();
 })();
 """
 
@@ -1102,8 +1389,11 @@ def register_web(mcp: FastMCP, app: App) -> None:
         room = store.room(uid, room_id)  # NotFound for non-members
         rid = quote(room["id"])
         owner = room["role"] == "owner"
-        msgs = store.recent_for_person(uid, room_id)
+        msgs, prev_cursor = store.recent_for_person(uid, room_id)
         last = msgs[-1]["id"] if msgs else 0
+        # Only mark unread when the person had already read this room before.
+        unread_from = next((m["id"] for m in msgs if m["id"] > prev_cursor), 0) if prev_cursor else 0
+        unread_count = sum(1 for m in msgs if m["id"] >= unread_from) if unread_from else 0
         csrf = csrf_field(request)
         members = store.members(uid, room_id)
         agents = store.room_agents(uid, room_id)
@@ -1180,7 +1470,9 @@ def register_web(mcp: FastMCP, app: App) -> None:
         empty = '<p class="muted" id="empty">No messages yet.</p>' if not msgs else ""
         parts.append(
             f'{empty}<ol class="messages" id="messages" data-room="{e(room["id"])}" data-me="{e(me)}" '
-            f'data-last="{last}">{"".join(items)}</ol>'
+            f'data-last="{last}"'
+            + (f' data-unread-from="{unread_from}" data-unread-count="{unread_count}"' if unread_from else '')
+            + f'>{"".join(items)}</ol>'
             f'<form method="post" action="/r/{rid}/send" class="composer-wrap" id="composer">{csrf}'
             '<input type="hidden" name="thread" id="thread">'
             '<div class="replying" id="replying" hidden>↳ Replying to <b id="replying-to"></b>'
@@ -1329,6 +1621,13 @@ def register_web(mcp: FastMCP, app: App) -> None:
         parts.append(
             f'<aside class="panel{" open" if panel_open else ""}" id="room-panel" aria-label="Room">'
             f'{"".join(panel)}</aside><a class="scrim" href="#" data-close aria-label="Close"></a>'
+        )
+        parts.append(
+            '<aside class="rail" id="timeline" aria-label="Conversation timeline" hidden>'
+            '<div class="rail-marks"></div><div class="rail-win" hidden></div>'
+            '<div class="rail-handle" hidden></div><div class="rail-unread" hidden></div>'
+            '<div class="rail-ghost" hidden></div><div class="rail-tip" hidden></div></aside>'
+            '<button type="button" class="rail-new" id="timeline-new" hidden></button>'
         )
         parts.append(f'<script nonce="{request.state.nonce}">{ROOM_JS}</script>')
         return page(request, room["name"], "".join(parts))
