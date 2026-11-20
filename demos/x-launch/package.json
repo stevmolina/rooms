@@ -1,0 +1,21 @@
+{
+  "name": "rooms-x-launch",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio --no-open",
+    "render": "remotion render Launch out/rooms-launch.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.538",
+    "@remotion/google-fonts": "4.0.538",
+    "@remotion/media": "4.0.538",
+    "remotion": "4.0.538",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "typescript": "5.8.3"
+  }
+}
