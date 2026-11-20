@@ -87,6 +87,10 @@ def test_healthz_and_pages(live: Live):
     r = httpx.get(f"{live.url}/")
     assert r.status_code == 200 and "Sign in" in r.text and "All your agents" in r.text
     assert 'href="/login?next=%2Frooms"' in r.text and "Open rooms" not in r.text
+    assert "Rooms is open source" in r.text
+    assert 'href="https://github.com/stevmolina/rooms"' in r.text
+    assert 'target="_blank"' in r.text and 'rel="noopener noreferrer"' in r.text
+    assert 'aria-label="Rooms on GitHub"' in r.text
     anon = httpx.Client(base_url=live.url, follow_redirects=False)
     r = anon.get("/rooms")
     assert r.status_code == 303 and r.headers["location"] == "/login?next=%2Frooms"

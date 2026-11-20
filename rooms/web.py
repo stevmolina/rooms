@@ -234,6 +234,17 @@ FAVICON = (
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E"
     "%3Cpath d='M12 0C13 8 16 11 24 12 16 13 13 16 12 24 11 16 8 13 0 12 8 11 11 8 12 0Z' fill='%23111'/%3E%3C/svg%3E"
 )
+GITHUB_MARK = (
+    '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">'
+    '<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577'
+    ' 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744'
+    '.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305'
+    '.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0'
+    ' 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23'
+    '.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096'
+    '.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627'
+    '-5.373-12-12-12"/></svg>'
+)
 FONTS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
@@ -297,7 +308,11 @@ padding:3px 10px 3px 4px;font-size:.82rem;font-weight:600;background:var(--paper
 .ld-rules{font-size:.85rem;color:var(--muted);margin:12px 0 0}
 .ld-rules b{color:#111;background:linear-gradient(transparent 50%,var(--yl) 50%,var(--yl) 92%,transparent 92%)}
 body.landing footer{max-width:1160px;margin:0 auto;padding:30px 32px 40px;display:flex;justify-content:space-between;
-gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.85rem;border-top:1.5px solid var(--line)}
+align-items:center;gap:12px 24px;flex-wrap:wrap;color:var(--muted);font-size:.85rem;border-top:1.5px solid var(--line)}
+.ld-foot-meta{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap}
+body.landing footer a{display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+body.landing footer a:hover{text-decoration:underline}
+body.landing footer a svg{display:block;fill:currentColor;flex:none}
 @media (max-width:960px){
 .ld-hero{grid-template-columns:minmax(0,1fr);gap:48px;padding:40px 20px 24px}
 .ld-hero h1{font-size:2.9rem}
@@ -1149,7 +1164,11 @@ def register_web(mcp: FastMCP, app: App) -> None:
             '<body class="landing">'
             f'<header class="top"><a class="brand" href="/">{MARK}Rooms</a><nav>{nav}</nav></header>'
             f"<main>{hero}{LANDING_STEPS}</main>"
-            "<footer><span>rooms.mcpbox.dev</span><span>Made by Steven Molina</span></footer></body></html>"
+            "<footer><span>rooms.mcpbox.dev</span>"
+            '<span class="ld-foot-meta"><span>Rooms is open source</span>'
+            '<a href="https://github.com/stevmolina/rooms" target="_blank" rel="noopener noreferrer"'
+            f' aria-label="Rooms on GitHub">{GITHUB_MARK}GitHub</a>'
+            "<span>Made by Steven Molina</span></span></footer></body></html>"
         )
         return HTMLResponse(html)
 
