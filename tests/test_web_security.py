@@ -6,7 +6,7 @@ import re
 
 import httpx
 
-from conftest import Live, make_room
+from conftest import Live, add_member, make_room
 
 from rooms.store import safe_next
 
@@ -59,18 +59,18 @@ def test_next_redirect_is_relative_only(live: Live):
     client = httpx.Client(base_url=live.url, follow_redirects=False)
     for bad in ["https://evil.com", "//evil.com", "/\\evil.com", "http:/evil.com", "javascript:alert(1)"]:
         r = client.get("/dev/login", params={"token": live.token("bob"), "next": bad})
-        assert r.status_code == 303 and r.headers["location"] == "/", bad
+        assert r.status_code == 303 and r.headers["location"] == "/rooms", bad
     r = client.get("/dev/login", params={"token": live.token("bob"), "next": "/join/abc"})
     assert r.headers["location"] == "/join/abc"
     anon = httpx.Client(base_url=live.url, follow_redirects=False)
     r = anon.get("/login", params={"next": "//evil.com"})
-    assert 'name="next" value="/"' in r.text
+    assert 'name="next" value="/rooms"' in r.text
 
 
 def test_safe_next_unit():
     assert safe_next("/r/r_abc") == "/r/r_abc"
     for bad in [None, "", "evil.com", "//evil.com", "/\\evil.com", "https://x", "/a\nb"]:
-        assert safe_next(bad) == "/"
+        assert safe_next(bad) == "/rooms"
 
 
 def test_mcp_requires_token(live: Live):
@@ -85,6 +85,38 @@ def test_mcp_requires_token(live: Live):
 def test_healthz_and_pages(live: Live):
     assert httpx.get(f"{live.url}/healthz").json() == {"ok": True}
     r = httpx.get(f"{live.url}/")
-    assert r.status_code == 200 and "Sign in" in r.text
-    r = live.web("alice").get("/")
-    assert "Your rooms" in r.text and "claude mcp add" in r.text
+    assert r.status_code == 200 and "Sign in" in r.text and "All your agents" in r.text
+    assert 'href="/login?next=%2Frooms"' in r.text and "Open rooms" not in r.text
+    anon = httpx.Client(base_url=live.url, follow_redirects=False)
+    r = anon.get("/rooms")
+    assert r.status_code == 303 and r.headers["location"] == "/login?next=%2Frooms"
+    alice = live.web("alice")
+    r = alice.get("/")
+    assert r.status_code == 200 and "All your agents" in r.text
+    assert 'href="/rooms">Open rooms' in r.text and "Your rooms" not in r.text
+    r = alice.get("/rooms")
+    assert "Your rooms" in r.text and "claude mcp add" in r.text and 'class="brand" href="/"' in r.text
+
+
+async def test_rooms_dashboard(live: Live):
+    room = await make_room(live, "erin", name="Dashboard room", notice="Post done / doing / blocked.")
+    quiet = await make_room(live, "erin", name="Quiet room")
+    await add_member(live, room, "erin", "frank")
+    frank = live.web("frank")
+    assert frank.post(f"/r/{room}/send", {"body": "hi"}).status_code == 303
+    r = live.web("erin").get("/rooms")
+    html = r.text
+    # New room tile opens the create form, which still posts to /rooms.
+    assert 'class="dash-tile dash-new" href="#new-room"' in html
+    assert 'id="new-room"' in html and 'action="/rooms"' in html and 'name="notice"' in html
+    # Connect your agent is a top bar button that reveals the install lines.
+    assert 'href="#connect"' in html and 'id="connect"' in html and "claude mcp add" in html
+    # Cards come from real data: name, notice, unread badge, link to the room.
+    assert f'href="/r/{room}"' in html and f'href="/r/{quiet}"' in html
+    card = html.split(f'href="/r/{room}"', 1)[1].split("</a>", 1)[0]
+    assert "Dashboard room" in card and "Post done / doing / blocked." in card and "1 new</span>" in card
+    quiet_card = html.split(f'href="/r/{quiet}"', 1)[1].split("</a>", 1)[0]
+    assert "No new messages" in quiet_card and "new</span>" not in quiet_card
+    tiles = html.count('<a class="dash-tile" href="/r/')
+    assert tiles >= 2 and f'<span class="dash-count">{tiles}</span>' in html
+    assert 'class="brand" href="/"' in html and "Sign out" in html

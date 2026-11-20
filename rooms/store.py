@@ -196,13 +196,13 @@ def parse_mentions(body: str, explicit: list[str] | None = None) -> list[str]:
 
 
 def safe_next(value: str | None) -> str:
-    """Only same-site relative paths: starts with '/', not '//' or '/\\'."""
+    """Only same-site relative paths: starts with '/', not '//' or '/\\'. Else the room list."""
     if not value or not isinstance(value, str):
-        return "/"
+        return "/rooms"
     if not value.startswith("/") or value.startswith("//") or "\\" in value:
-        return "/"
+        return "/rooms"
     if any(ord(c) < 0x20 or ord(c) == 0x7F for c in value):
-        return "/"
+        return "/rooms"
     return value
 
 

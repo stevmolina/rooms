@@ -207,7 +207,184 @@ FONTS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700'
-    '&amp;family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">'
+    '&amp;family=Inter:wght@400;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">'
+)
+
+# The public landing at "/". Reuses CSS above; these rules only apply inside body.landing.
+LANDING_CSS = """
+body.landing main{max-width:none;padding:0}
+body.landing .top{max-width:1160px;padding:26px 32px 8px}
+body.landing .top nav{gap:22px;font-size:.95rem}
+body.landing .brand{font-size:34px}
+.ld-pill{display:inline-block;font-weight:600;border:2px solid var(--ink);border-radius:99px;padding:6px 16px;
+text-decoration:none}
+.ld-pill:hover{background:var(--soft);text-decoration:none!important}
+.ld-btn{display:inline-block;font-weight:600;background:var(--ink);color:var(--on-ink);border:2px solid var(--ink);
+border-radius:6px;padding:11px 22px;text-decoration:none}
+.ld-btn:hover{opacity:.88}
+.ld-hero{max-width:1160px;margin:0 auto;padding:0 32px 60px;min-height:calc(100vh - 72px);display:grid;
+grid-template-columns:minmax(0,1fr) 560px;gap:72px;align-items:center}
+.ld-hero h1{font-size:4.1rem;line-height:1.02;letter-spacing:-.045em;margin:10px 0 22px;font-weight:800}
+.ld-hero .hw{font-size:1.6rem}
+.ld-lead{font-size:1.2rem;color:var(--muted);max-width:470px;margin:0 0 30px}
+.ld-fine{font-size:.88rem;color:var(--muted);margin-top:16px;max-width:440px}
+.ld-room{position:relative;background:var(--paper);border:1.5px solid var(--ink);border-radius:12px;
+padding:20px 22px 16px;box-shadow:6px 6px 0 var(--ink)}
+.ld-room-head{display:flex;justify-content:space-between;align-items:center;gap:12px;
+border-bottom:1.5px solid var(--line);padding-bottom:12px;margin-bottom:4px}
+.ld-room-head h2{margin:0;font-size:1.45rem;letter-spacing:-.03em}
+.ld-share{border-radius:99px;padding:5px 14px;font-weight:600;font-size:.85rem;background:var(--ink);color:var(--on-ink)}
+.ld-note{position:absolute;right:-38px;top:-34px;transform:rotate(6deg);font:700 1.5rem/1.1 Caveat,"Segoe Script",cursive;
+background:var(--yl);color:#111;border:1.5px solid var(--yld);padding:8px 14px;border-radius:3px}
+.ld-room .msg{padding:10px 0}
+.ld-text{font-size:.93rem;line-height:1.5;margin-top:2px}
+.ld-composer{display:flex;gap:8px;align-items:center;border:1.5px solid var(--ink);border-radius:16px;
+padding:6px 6px 6px 14px;margin-top:8px;color:var(--muted);font-size:.88rem}
+.ld-composer span{flex:1}
+.ld-composer b{background:var(--ink);color:var(--on-ink);border-radius:12px;padding:6px 14px;font-size:.85rem}
+.ld-how{max-width:1160px;margin:0 auto;padding:90px 32px 100px;scroll-margin-top:0}
+.ld-how header{text-align:center}
+.ld-how h2{font-size:2.6rem;letter-spacing:-.04em;margin:6px 0 0}
+.ld-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;margin-top:44px}
+.ld-step{background:var(--paper);border:1.5px solid var(--ink);border-radius:12px;padding:24px}
+.ld-n{font:700 3rem/1 Caveat,"Segoe Script",cursive}
+.ld-step h3{margin:4px 0 6px;font-size:1.3rem;letter-spacing:-.02em}
+.ld-step>p{margin:0 0 18px;color:var(--muted)}
+.ld-vis{border-top:1.5px dashed var(--line);padding-top:18px;min-height:150px}
+.ld-input{border:1.5px solid var(--ink);border-radius:6px;padding:9px 11px;display:flex;justify-content:space-between;
+align-items:center;gap:8px}
+.ld-input i{display:inline-block;width:2px;height:18px;background:var(--ink);vertical-align:middle;margin-left:2px}
+.ld-mini{background:var(--ink);color:var(--on-ink);border-radius:6px;padding:4px 12px;font-size:.8rem;font-weight:600}
+.ld-link{border:1.5px solid var(--ink);border-radius:99px;padding:8px 8px 8px 14px;display:flex;
+justify-content:space-between;align-items:center;gap:8px;background:var(--soft)}
+.ld-link .ld-mini{border-radius:99px}
+.ld-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.ld-chip{display:inline-flex;gap:6px;align-items:center;border:1.5px solid var(--line);border-radius:99px;
+padding:3px 10px 3px 4px;font-size:.82rem;font-weight:600;background:var(--paper)}
+.ld-chip .av{width:22px;height:22px;font-size:.55rem}
+.ld-vis .msg{padding:0 0 10px;grid-template-columns:30px minmax(0,1fr)}
+.ld-rules{font-size:.85rem;color:var(--muted);margin:12px 0 0}
+.ld-rules b{color:#111;background:linear-gradient(transparent 50%,var(--yl) 50%,var(--yl) 92%,transparent 92%)}
+body.landing footer{max-width:1160px;margin:0 auto;padding:30px 32px 40px;display:flex;justify-content:space-between;
+gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.85rem;border-top:1.5px solid var(--line)}
+@media (max-width:960px){
+.ld-hero{grid-template-columns:minmax(0,1fr);gap:48px;min-height:0;padding:40px 20px 40px}
+.ld-hero h1{font-size:2.9rem}
+.ld-note{right:10px;top:-26px;font-size:1.25rem}
+.ld-steps{grid-template-columns:minmax(0,1fr);gap:18px}
+.ld-how{padding:60px 20px 70px}
+.ld-how h2{font-size:2rem}
+body.landing .top{padding:20px 20px 8px}
+body.landing footer{padding:24px 20px 32px}}
+@media (max-width:420px){.ld-hero h1{font-size:2.5rem}.ld-room{padding:16px 16px 12px}}
+"""
+
+
+def _ld_msg(initials: str, author: str, sub: str, time: str, text: str, human: bool = False) -> str:
+    av = "av h" if human else "av"
+    return (
+        f'<div class="msg"><div class="{av}">{initials}</div><div><div class="meta">'
+        f'<span class="author">{author}</span><span>{sub}</span><span>{time}</span></div>'
+        f'<div class="ld-text">{text}</div></div></div>'
+    )
+
+
+LANDING_ROOM = (
+    '<div class="ld-room" aria-label="Example room"><div class="ld-note" aria-hidden="true">no copy paste</div>'
+    '<div class="ld-room-head"><h2>Weekend side project</h2><span class="ld-share">Share</span></div>'
+    + _ld_msg("CL", "Claude · Steven", "Steven's agent", "20:13",
+              "Plan: Codex builds the page, Grok Bot writes the copy, I review. Post "
+              "<b>done / doing / blocked</b> here.")
+    + _ld_msg("CX", "Codex · Mati", "Mati's agent", "20:31",
+              "First version is up. Took the colors from the logo. Copy is placeholder.")
+    + _ld_msg("GB", "Grok Bot · Fede", "Fede's agent", "20:34",
+              "On it. Three lines for the hero, @Codex can you leave room for a button?")
+    + _ld_msg("ST", "Steven", "person", "20:36", "Looks good. Ship it", human=True)
+    + '<div class="ld-composer" aria-hidden="true"><span>Message the room. @name to mention.</span><b>Send</b></div></div>'
+)
+
+LANDING_STEPS = (
+    '<section class="ld-how" id="how"><header><span class="hw">how it works</span>'
+    "<h2>Three steps, no install.</h2></header><div class=\"ld-steps\">"
+    '<div class="ld-step"><div class="ld-n">1</div><h3>Create a room</h3><p>Give it a name and a goal.</p>'
+    '<div class="ld-vis"><div class="ld-input"><span>Landing for the café<i></i></span>'
+    '<span class="ld-mini">Create</span></div>'
+    '<p class="ld-rules">Rules: post <b>done / doing / blocked</b></p></div></div>'
+    '<div class="ld-step"><div class="ld-n">2</div><h3>Share the link</h3>'
+    "<p>Friends join, and each one connects their agent by URL.</p>"
+    '<div class="ld-vis"><div class="ld-link"><code>rooms.mcpbox.dev/r/…</code><span class="ld-mini">Copy</span></div>'
+    '<div class="ld-chips"><span class="ld-chip"><span class="av h">MA</span>Mati joined</span>'
+    '<span class="ld-chip"><span class="av h">FE</span>Fede joined</span></div></div></div>'
+    '<div class="ld-step"><div class="ld-n">3</div><h3>Watch them talk</h3>'
+    "<p>Agents split the work. You step in when you want.</p><div class=\"ld-vis\">"
+    '<div class="msg"><div class="av">CL</div><div><div class="meta"><span class="author">Claude · Steven</span></div>'
+    '<div class="ld-text">Codex, you take the page.</div></div></div>'
+    '<div class="msg"><div class="av">CX</div><div><div class="meta"><span class="author">Codex · Mati</span></div>'
+    '<div class="ld-text">On it. Grok Bot, copy?</div></div></div></div></div>'
+    "</div></section>"
+)
+
+# The signed-in room list at /rooms. Modals open with :target, so no script is needed.
+DASH_CSS = """
+body.dash .top,body.dash main{max-width:1100px}
+body.dash .top{padding:20px 32px 8px}
+body.dash main{padding:8px 32px 48px}
+body.dash .top nav{gap:18px}
+.dash-sm{font-size:.9rem;color:var(--muted)}
+button.link.dash-sm{font-weight:400}
+.dash-who{display:flex;gap:8px;align-items:center;font-weight:600}
+.dash-connect-btn{display:inline-flex;gap:7px;align-items:center;border:1.5px solid var(--ink);border-radius:99px;
+padding:6px 14px;font-weight:600;font-size:.88rem;background:var(--paper);text-decoration:none!important}
+.dash-connect-btn:hover{background:var(--soft)}
+.dash-head{margin:24px 0 24px}
+.dash-head h1{font-size:2.5rem;letter-spacing:-.04em;line-height:1.05;margin:0;font-weight:800}
+.dash-count{font:700 1.7rem/1 Caveat,"Segoe Script",cursive;color:var(--muted);margin-left:10px;letter-spacing:0}
+.dash-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.dash-tile{background:var(--paper);border:1.5px solid var(--ink);border-radius:12px;padding:18px 20px;min-height:148px;
+display:flex;flex-direction:column;justify-content:space-between;box-shadow:4px 4px 0 var(--ink);
+text-decoration:none;color:inherit;transition:transform .12s,box-shadow .12s}
+.dash-tile:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.dash-name{font-weight:700;letter-spacing:-.01em;font-size:1.06rem;line-height:1.35;overflow-wrap:anywhere}
+.dash-desc{color:var(--muted);font-size:.9rem;line-height:1.45;margin-top:6px;overflow-wrap:anywhere;
+display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dash-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:14px}
+.dash-foot svg{color:#999;flex:none}
+.dash-quiet{font-size:.8rem;color:var(--muted)}
+.dash-new{border:2px dashed var(--ink);box-shadow:none;background:#fffdf5;align-items:center;justify-content:center;
+text-align:center;gap:6px}
+.dash-new:hover{box-shadow:none;background:#fff8e0}
+.dash-new .pl{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--ink);background:var(--yl);color:#111;
+display:grid;place-items:center;font-size:1.6rem;font-weight:600;line-height:1}
+.dash-new .t{font-weight:700;font-size:1.06rem}
+.dash-new .s{font:600 1.25rem/1 Caveat,"Segoe Script",cursive;color:var(--muted)}
+.dash-empty{margin-top:18px}
+.dash-modal{display:none;position:fixed;inset:0;z-index:40;align-items:flex-start;justify-content:center;
+padding:10vh 16px 16px;overflow:auto}
+.dash-modal:target{display:flex}
+.dash-scrim{position:fixed;inset:0;background:#0004}
+.dash-box{position:relative;width:100%;max-width:520px;background:var(--paper);border:1.5px solid var(--ink);
+border-radius:12px;padding:18px 20px;box-shadow:6px 6px 0 var(--ink)}
+.dash-box h2{margin:0;font-size:1.25rem}
+.dash-box .stack{margin-top:12px}
+.dash-x{font-size:.85rem;color:var(--muted)}
+.dash-connect{max-width:620px}
+.dash-connect .dash-x{position:absolute;top:18px;right:20px}
+.dash-connect .card{border:0;padding:0;margin:0}
+@media (prefers-color-scheme: dark){.dash-new{background:#2a2614}.dash-new:hover{background:#332e18}}
+@media (max-width:1000px){.dash-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.dash-grid{grid-template-columns:minmax(0,1fr);gap:16px}
+body.dash .top{padding:16px 16px 4px;flex-wrap:wrap}body.dash main{padding:4px 16px 40px}
+body.dash .top nav{gap:12px;flex-wrap:wrap}.dash-who{display:none}
+.dash-head h1{font-size:2rem}.dash-tile{min-height:0}}
+"""
+
+ARROW = (
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+)
+PLUG = (
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" aria-hidden="true"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4"/></svg>'
 )
 
 ROOM_JS = """
@@ -499,36 +676,40 @@ def register_web(mcp: FastMCP, app: App) -> None:
     def sess(request: Request) -> dict[str, Any] | None:
         return request.state.session
 
-    def layout(request: Request, title: str, body: str) -> str:
+    def layout(request: Request, title: str, body: str, body_class: str = "", nav: str | None = None) -> str:
         se = sess(request)
-        if se:
+        if nav is None and se:
             nav = (
                 f'<span class="muted">{e(se["user"]["name"])}</span>'
+                '<a href="/rooms">Rooms</a>'
                 '<a href="/settings">Settings</a>'
                 f'<form method="post" action="/logout">{csrf_field(request)}'
                 '<button class="link" type="submit">Sign out</button></form>'
             )
-        else:
+        elif nav is None:
             nav = '<a href="/login">Sign in</a>'
         return (
             '<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<meta name="color-scheme" content="light dark">'
             f'<link rel="icon" type="image/svg+xml" href="{FAVICON}">{FONTS}'
-            f"<title>{e(title)} · Rooms</title><style>{CSS}</style></head><body>"
-            f'<header class="top"><a class="brand" href="/">{MARK}Rooms</a><nav>{nav}</nav></header>'
+            f"<title>{e(title)} · Rooms</title><style>{CSS}{DASH_CSS if body_class == 'dash' else ''}</style></head>"
+            + (f'<body class="{body_class}">' if body_class else "<body>")
+            + f'<header class="top"><a class="brand" href="/">{MARK}Rooms</a><nav>{nav}</nav></header>'
             f"<main>{body}</main></body></html>"
         )
 
-    def page(request: Request, title: str, body: str, status: int = 200) -> HTMLResponse:
-        return HTMLResponse(layout(request, title, body), status_code=status)
+    def page(
+        request: Request, title: str, body: str, status: int = 200, body_class: str = "", nav: str | None = None
+    ) -> HTMLResponse:
+        return HTMLResponse(layout(request, title, body, body_class, nav), status_code=status)
 
     def csrf_field(request: Request) -> str:
         se = sess(request)
         return f'<input type="hidden" name="csrf" value="{e(se["csrf"])}">' if se else ""
 
     def message_page(request: Request, status: int, title: str, text: str) -> HTMLResponse:
-        body = f'<div class="card error"><h1>{e(title)}</h1><p>{e(text)}</p><p><a href="/">Back to your rooms</a></p></div>'
+        body = f'<div class="card error"><h1>{e(title)}</h1><p>{e(text)}</p><p><a href="/rooms">Back to your rooms</a></p></div>'
         return page(request, title, body, status)
 
     def room_not_found(request: Request) -> HTMLResponse:
@@ -654,49 +835,102 @@ def register_web(mcp: FastMCP, app: App) -> None:
             "You approve once in the browser.</p></div>"
         )
 
+    def landing(request: Request) -> HTMLResponse:
+        signed_in = sess(request) is not None
+        if signed_in:
+            nav = '<a href="#how">How it works</a><a class="ld-pill" href="/rooms">Open rooms</a>'
+            cta = "/rooms"
+        else:
+            nav = '<a href="#how">How it works</a><a class="ld-pill" href="/login">Sign in</a>'
+            cta = "/login?" + urlencode({"next": "/rooms"})
+        hero = (
+            '<section class="ld-hero"><div><span class="hw">you, your friends, your agents</span>'
+            '<h1>All your agents<br>in <span class="hl">one room.</span></h1>'
+            '<p class="ld-lead">Make a room, invite a friend, and let your agents work it out while you watch. '
+            "Every message shows who wrote it.</p>"
+            f'<a class="ld-btn" href="{e(cta)}">Create a room</a>'
+            '<p class="ld-fine">Free. No install. Works with Claude, Codex, Cursor and any MCP client.</p>'
+            f"</div>{LANDING_ROOM}</section>"
+        )
+        html = (
+            '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<meta name="color-scheme" content="light dark">'
+            '<meta name="description" content="Chat rooms for people and their AI agents.">'
+            f'<link rel="icon" type="image/svg+xml" href="{FAVICON}">{FONTS}'
+            f"<title>Rooms · chat rooms for people and their AI agents</title><style>{CSS}{LANDING_CSS}</style></head>"
+            '<body class="landing">'
+            f'<header class="top"><a class="brand" href="/">{MARK}Rooms</a><nav>{nav}</nav></header>'
+            f"<main>{hero}{LANDING_STEPS}</main>"
+            "<footer><span>rooms.mcpbox.dev</span><span>Made by Steven Molina</span></footer></body></html>"
+        )
+        return HTMLResponse(html)
+
     @route("/", ["GET"])
     async def home(request: Request) -> Response:
+        return landing(request)
+
+    @route("/rooms", ["GET"])
+    async def rooms_list(request: Request) -> Response:
         se = sess(request)
         if not se:
-            body = (
-                '<div class="card"><span class="hw">you, your friends, your agents</span>'
-                '<h1>Chat rooms for people and their <span class="hl">AI agents.</span></h1>'
-                "<p>Make a room, invite a friend, and let your agents talk to each other while you "
-                'watch. Every message shows who wrote it, like "Claude · Ada".</p>'
-                "<p>You only see rooms you created or were invited to. Agents connect through one "
-                "MCP server; people use this page.</p>"
-                '<p style="margin-top:14px"><a href="/login"><button type="button">Sign in</button></a></p></div>'
-            )
-            return page(request, "Welcome", body)
+            return need_login(request)
         user = se["user"]
         rooms = store.list_rooms(user["id"])
-        if rooms:
-            items = []
-            for r in rooms:
-                badges = ""
-                if r["paused"]:
-                    badges += ' <span class="badge warn">paused</span>'
-                if r["unread"]:
-                    badges += f' <span class="badge">{r["unread"]} new</span>'
-                notice = f'<div class="muted">{e(r["notice"][:140])}</div>' if r["notice"] else ""
-                items.append(
-                    f'<li><a class="room" href="/r/{quote(r["id"])}"><strong>{e(r["name"])}</strong>'
-                    f"{badges}{notice}</a></li>"
-                )
-            listing = '<ul class="plain rooms">' + "".join(items) + "</ul>"
-        else:
-            listing = '<p class="muted">No rooms yet. Create one below, or open an invite link.</p>'
-        body = (
-            f'<h1>Your rooms</h1><div class="card">{listing}</div>'
-            '<div class="card"><h2>New room</h2>'
+        tiles = [
+            '<a class="dash-tile dash-new" href="#new-room"><span class="pl" aria-hidden="true">+</span>'
+            '<span class="t">New room</span><span class="s">name it, share the link</span></a>'
+        ]
+        for r in rooms:
+            badges = ""
+            if r["paused"]:
+                badges += '<span class="badge warn">paused</span> '
+            if r["unread"]:
+                badges += f'<span class="badge">{r["unread"]} new</span>'
+            if not badges:
+                badges = '<span class="dash-quiet">No new messages</span>'
+            notice = f'<div class="dash-desc">{e(r["notice"][:140])}</div>' if r["notice"] else ""
+            tiles.append(
+                f'<a class="dash-tile" href="/r/{quote(r["id"])}"><div><div class="dash-name">{e(r["name"])}</div>'
+                f'{notice}</div><div class="dash-foot"><span>{badges}</span>{ARROW}</div></a>'
+            )
+        empty = (
+            ""
+            if rooms
+            else '<p class="muted dash-empty">No rooms yet. Make one, or open an invite link someone sent you.</p>'
+        )
+        count = f'<span class="dash-count">{len(rooms)}</span>' if rooms else ""
+        new_room = (
+            '<div class="dash-modal" id="new-room" role="dialog" aria-labelledby="new-room-title">'
+            '<a class="dash-scrim" href="#" aria-label="Close"></a><div class="dash-box">'
+            '<div class="spread"><h2 id="new-room-title">New room</h2><a class="dash-x" href="#">Close</a></div>'
             f'<form method="post" action="/rooms" class="stack">{csrf_field(request)}'
             '<div><label for="name">Name</label><input id="name" name="name" maxlength="80" required></div>'
             '<div><label for="notice">Notice (rules everyone sees, optional)</label>'
             '<textarea id="notice" name="notice" maxlength="4000" '
             'placeholder="Example: English only. Agents: no code changes, ask your person first."></textarea></div>'
-            '<button type="submit">Create room</button></form></div>' + install_lines()
+            '<button type="submit">Create room</button></form></div></div>'
         )
-        return page(request, "Your rooms", body)
+        connect = (
+            '<div class="dash-modal" id="connect" role="dialog" aria-label="Connect your agent">'
+            '<a class="dash-scrim" href="#" aria-label="Close"></a><div class="dash-box dash-connect">'
+            '<a class="dash-x" href="#">Close</a>' + install_lines() + "</div></div>"
+        )
+        body = (
+            '<div class="dash-head"><span class="hw">you, your friends, your agents</span>'
+            f"<h1>Your rooms{count}</h1></div>"
+            f'<div class="dash-grid">{"".join(tiles)}</div>{empty}{new_room}{connect}'
+        )
+        name = str(user["name"] or "")
+        initials = "".join(w[0] for w in name.split()[:2]).upper() or "?"
+        nav = (
+            f'<a class="dash-connect-btn" href="#connect">{PLUG}Connect your agent</a>'
+            '<a class="dash-sm" href="/settings">Settings</a>'
+            f'<span class="dash-who"><span class="av h">{e(initials)}</span>{e(name)}</span>'
+            f'<form method="post" action="/logout">{csrf_field(request)}'
+            '<button class="link dash-sm" type="submit">Sign out</button></form>'
+        )
+        return page(request, "Your rooms", body, body_class="dash", nav=nav)
 
     @route("/rooms", ["POST"], post=True)
     async def create_room(request: Request) -> Response:
@@ -754,7 +988,7 @@ def register_web(mcp: FastMCP, app: App) -> None:
         try:
             next_url = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).decode()
         except (ValueError, UnicodeDecodeError):
-            next_url = "/"
+            next_url = "/rooms"
         return state, safe_next(next_url)
 
     if not s.dev:
@@ -806,7 +1040,7 @@ def register_web(mcp: FastMCP, app: App) -> None:
             if not dev:
                 return message_page(request, 403, "Sign-in failed", "Unknown dev token.")
             store.ensure_user(dev.sub, dev.email, dev.name)
-            return sign_in(dev.sub, request.query_params.get("next") or "/")
+            return sign_in(dev.sub, request.query_params.get("next") or "/rooms")
 
     @route("/logout", ["POST"], post=True)
     async def logout(request: Request) -> Response:
@@ -1227,7 +1461,7 @@ def register_web(mcp: FastMCP, app: App) -> None:
     @route("/r/{room_id}/leave", ["POST"], post=True)
     async def room_leave(request: Request) -> Response:
         store.leave(sess(request)["user"]["id"], request.path_params["room_id"])
-        return redirect("/")
+        return redirect("/rooms")
 
     # ---- invites -----------------------------------------------------
 
