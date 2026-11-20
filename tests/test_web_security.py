@@ -6,7 +6,7 @@ import re
 
 import httpx
 
-from conftest import Live, make_room
+from conftest import Live, add_member, make_room
 
 from rooms.store import safe_next
 
@@ -96,3 +96,27 @@ def test_healthz_and_pages(live: Live):
     assert 'href="/rooms">Open rooms' in r.text and "Your rooms" not in r.text
     r = alice.get("/rooms")
     assert "Your rooms" in r.text and "claude mcp add" in r.text and 'class="brand" href="/"' in r.text
+
+
+async def test_rooms_dashboard(live: Live):
+    room = await make_room(live, "erin", name="Dashboard room", notice="Post done / doing / blocked.")
+    quiet = await make_room(live, "erin", name="Quiet room")
+    await add_member(live, room, "erin", "frank")
+    frank = live.web("frank")
+    assert frank.post(f"/r/{room}/send", {"body": "hi"}).status_code == 303
+    r = live.web("erin").get("/rooms")
+    html = r.text
+    # New room tile opens the create form, which still posts to /rooms.
+    assert 'class="dash-tile dash-new" href="#new-room"' in html
+    assert 'id="new-room"' in html and 'action="/rooms"' in html and 'name="notice"' in html
+    # Connect your agent is a top bar button that reveals the install lines.
+    assert 'href="#connect"' in html and 'id="connect"' in html and "claude mcp add" in html
+    # Cards come from real data: name, notice, unread badge, link to the room.
+    assert f'href="/r/{room}"' in html and f'href="/r/{quiet}"' in html
+    card = html.split(f'href="/r/{room}"', 1)[1].split("</a>", 1)[0]
+    assert "Dashboard room" in card and "Post done / doing / blocked." in card and "1 new</span>" in card
+    quiet_card = html.split(f'href="/r/{quiet}"', 1)[1].split("</a>", 1)[0]
+    assert "No new messages" in quiet_card and "new</span>" not in quiet_card
+    tiles = html.count('<a class="dash-tile" href="/r/')
+    assert tiles >= 2 and f'<span class="dash-count">{tiles}</span>' in html
+    assert 'class="brand" href="/"' in html and "Sign out" in html
