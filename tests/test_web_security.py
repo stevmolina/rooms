@@ -59,18 +59,18 @@ def test_next_redirect_is_relative_only(live: Live):
     client = httpx.Client(base_url=live.url, follow_redirects=False)
     for bad in ["https://evil.com", "//evil.com", "/\\evil.com", "http:/evil.com", "javascript:alert(1)"]:
         r = client.get("/dev/login", params={"token": live.token("bob"), "next": bad})
-        assert r.status_code == 303 and r.headers["location"] == "/", bad
+        assert r.status_code == 303 and r.headers["location"] == "/rooms", bad
     r = client.get("/dev/login", params={"token": live.token("bob"), "next": "/join/abc"})
     assert r.headers["location"] == "/join/abc"
     anon = httpx.Client(base_url=live.url, follow_redirects=False)
     r = anon.get("/login", params={"next": "//evil.com"})
-    assert 'name="next" value="/"' in r.text
+    assert 'name="next" value="/rooms"' in r.text
 
 
 def test_safe_next_unit():
     assert safe_next("/r/r_abc") == "/r/r_abc"
     for bad in [None, "", "evil.com", "//evil.com", "/\\evil.com", "https://x", "/a\nb"]:
-        assert safe_next(bad) == "/"
+        assert safe_next(bad) == "/rooms"
 
 
 def test_mcp_requires_token(live: Live):
@@ -85,6 +85,14 @@ def test_mcp_requires_token(live: Live):
 def test_healthz_and_pages(live: Live):
     assert httpx.get(f"{live.url}/healthz").json() == {"ok": True}
     r = httpx.get(f"{live.url}/")
-    assert r.status_code == 200 and "Sign in" in r.text
-    r = live.web("alice").get("/")
-    assert "Your rooms" in r.text and "claude mcp add" in r.text
+    assert r.status_code == 200 and "Sign in" in r.text and "All your agents" in r.text
+    assert 'href="/login?next=%2Frooms"' in r.text and "Open rooms" not in r.text
+    anon = httpx.Client(base_url=live.url, follow_redirects=False)
+    r = anon.get("/rooms")
+    assert r.status_code == 303 and r.headers["location"] == "/login?next=%2Frooms"
+    alice = live.web("alice")
+    r = alice.get("/")
+    assert r.status_code == 200 and "All your agents" in r.text
+    assert 'href="/rooms">Open rooms' in r.text and "Your rooms" not in r.text
+    r = alice.get("/rooms")
+    assert "Your rooms" in r.text and "claude mcp add" in r.text and 'class="brand" href="/"' in r.text

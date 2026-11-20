@@ -84,13 +84,13 @@ async def test_callback_checks_state_and_verified_email(workos):
         )
     )
     r = await client.get("/auth/callback", params={"code": "c2", "state": state})
-    assert r.status_code == 303 and r.headers["location"] == "/"
+    assert r.status_code == 303 and r.headers["location"] == "/rooms"
     cookie = r.headers["set-cookie"]
     assert cookie.startswith("__Host-rooms_session=")
     assert "Secure" in cookie and "Path=/" in cookie and "Domain" not in cookie
     assert r.headers["strict-transport-security"] == "max-age=31536000"
     assert app.store.get_user("user_x") == {"id": "user_x", "email": "x@example.com", "name": "Xena"}
-    home = await client.get("/")
+    home = await client.get("/rooms")
     assert "Your rooms" in home.text and "Xena" in home.text
 
 
@@ -146,7 +146,7 @@ async def test_logout_ends_the_workos_session_so_another_account_can_sign_in(wor
         assert r.status_code == 303
 
     await sign_in("user_a", "a@example.com", "session_A")
-    home = await client.get("/")
+    home = await client.get("/rooms")
     csrf = re.search(r'name="csrf" value="([^"]+)"', home.text).group(1)
     r = await client.post("/logout", data={"csrf": csrf}, headers={"origin": BASE})
     # A page that moves on to WorkOS by itself (a redirect would be blocked by CSP form-action).
@@ -159,7 +159,7 @@ async def test_logout_ends_the_workos_session_so_another_account_can_sign_in(wor
 
     # A second account can now sign in on the same browser.
     await sign_in("user_b", "b@example.com", "session_B")
-    home = await client.get("/")
+    home = await client.get("/rooms")
     assert "user_b" in home.text and "user_a" not in home.text
 
 
@@ -170,7 +170,7 @@ async def test_logout_without_a_workos_session_goes_home(workos):
         httpx.Response(200, json={"user": {"id": "user_c", "email": "c@example.com", "email_verified": True}})
     )
     await client.get("/auth/callback", params={"code": "c", "state": state})
-    home = await client.get("/")
+    home = await client.get("/rooms")
     csrf = re.search(r'name="csrf" value="([^"]+)"', home.text).group(1)
     r = await client.post("/logout", data={"csrf": csrf}, headers={"origin": BASE})
     assert r.status_code == 303 and r.headers["location"] == "/"
