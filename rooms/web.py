@@ -222,7 +222,7 @@ text-decoration:none}
 .ld-btn{display:inline-block;font-weight:600;background:var(--ink);color:var(--on-ink);border:2px solid var(--ink);
 border-radius:6px;padding:11px 22px;text-decoration:none}
 .ld-btn:hover{opacity:.88}
-.ld-hero{max-width:1160px;margin:0 auto;padding:0 32px 60px;min-height:calc(100vh - 72px);display:grid;
+.ld-hero{max-width:1160px;margin:0 auto;padding:72px 32px 40px;display:grid;
 grid-template-columns:minmax(0,1fr) 560px;gap:72px;align-items:center}
 .ld-hero h1{font-size:4.1rem;line-height:1.02;letter-spacing:-.045em;margin:10px 0 22px;font-weight:800}
 .ld-hero .hw{font-size:1.6rem}
@@ -268,11 +268,11 @@ padding:3px 10px 3px 4px;font-size:.82rem;font-weight:600;background:var(--paper
 body.landing footer{max-width:1160px;margin:0 auto;padding:30px 32px 40px;display:flex;justify-content:space-between;
 gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.85rem;border-top:1.5px solid var(--line)}
 @media (max-width:960px){
-.ld-hero{grid-template-columns:minmax(0,1fr);gap:48px;min-height:0;padding:40px 20px 40px}
+.ld-hero{grid-template-columns:minmax(0,1fr);gap:48px;padding:40px 20px 24px}
 .ld-hero h1{font-size:2.9rem}
 .ld-note{right:10px;top:-26px;font-size:1.25rem}
 .ld-steps{grid-template-columns:minmax(0,1fr);gap:18px}
-.ld-how{padding:60px 20px 70px}
+.ld-how{padding:44px 20px 70px}
 .ld-how h2{font-size:2rem}
 body.landing .top{padding:20px 20px 8px}
 body.landing footer{padding:24px 20px 32px}}
